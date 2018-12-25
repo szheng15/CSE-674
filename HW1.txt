@@ -1,0 +1,201 @@
+//CSE674 HW1
+//Due: 11:59PM, Saturday(9/15)
+
+#include <iostream>
+#include <list>
+
+using namespace std;
+
+
+class node {
+public:
+	int value;
+	node * next;
+	node * previous;
+	node(int i) { value = i; next = previous = nullptr; }
+	node() { next = previous = nullptr; }
+};
+
+class doubly_linked_list {
+public:
+	int num_nodes;
+	node * head;
+	node * tail;
+	doubly_linked_list() { num_nodes = 0; head = tail = nullptr; }
+	void make_random_list(int m, int n);
+	void print_forward();
+	void print_backward();
+	void insertion_sort();
+
+	//inplement the following three member functions:
+
+	void selection_sort(); //Sort the list using selection sort algorithm
+
+						   //Recursively merge sort i numbers starting at node pointed by p
+	void merge_sort(node * p, int i);//in-place recursive merge sort
+
+
+									 //Merge i1 numbers starting at node pointed by p1 with i2 numbers
+									 //starting at node pointed by p2
+	void merge(node * p1, int i1, node * p2, int i2);
+};
+
+void doubly_linked_list::make_random_list(int m, int n) {
+
+	for (int i = 0; i < m; i++) {
+		node * p1 = new node(rand() % n);
+		p1->previous = tail;
+		if (tail != nullptr) tail->next = p1;
+		tail = p1;
+		if (head == nullptr) head = p1;
+		num_nodes++;
+	}
+}
+
+void doubly_linked_list::print_forward() {
+	cout << endl;
+	node * p1 = head;
+	while (p1 != nullptr) {
+		cout << p1->value << " ";
+		p1 = p1->next;
+	}
+}
+
+void doubly_linked_list::print_backward() {
+	cout << endl;
+	node * p1 = tail;
+	while (p1 != nullptr) {
+		cout << p1->value << " ";
+		p1 = p1->previous;
+	}
+}
+
+void doubly_linked_list::insertion_sort() {
+	//Using insertion sort
+	if (head == nullptr || head->next == nullptr) return;
+	node * p1 = head->next, *p2;
+	int temp;
+	while (p1 != nullptr) {
+		p2 = p1;
+		temp = p1->value;
+		//cout << "value = " << p1->value << endl;
+		while (p2->previous != nullptr && temp < p2->previous->value) {
+			p2->value = p2->previous->value;
+			p2 = p2->previous;
+		}
+		p2->value = temp;
+		p1 = p1->next;
+	}
+}
+
+void doubly_linked_list::selection_sort() {
+	if (head == nullptr || head->next == nullptr) return;
+	node  *pfirst = head;
+	int min;
+	while (pfirst != tail) {
+		node *pSecond = pfirst->next;
+		while (pSecond != nullptr) {
+			if (pSecond->value <= pfirst->value) {
+				min = pSecond->value;
+				pSecond->value = pfirst->value;
+				pfirst->value = min;
+			}
+			pSecond = pSecond->next;
+		}
+		pfirst = pfirst->next;
+	}
+	//cout << "minimum :" << min << endl;
+}
+
+void doubly_linked_list::merge(node *p1, int i1, node *p2, int i2) {
+	while (i1 != 0 && i2 != 0) {
+		if (p1->value >= p2->value) {
+			if (p1->next == p2) {
+				swap(p1->value, p2->value);
+				p2 = p2->next;
+				i2--;
+				i1++;
+				//p1 = p1->next;
+			}
+			else {
+				swap(p1->value, p2->value);
+				node *p2pre = p2->previous;
+				node *p2next = p2->next;
+				node *p1pre = p1->previous;
+				node *p1next = p1->next;
+				p2pre->next = p2next;
+				if (p2next == nullptr) {
+					p2next = nullptr;
+				}
+				else {
+					p2next->previous = p2pre;
+				}
+				p1->next = p2;
+				p2->previous = p1;
+				p2->next = p1next;
+				p1next->previous = p2;
+				i1++;
+				i2--;
+				p2 = p2next;
+			}
+		}
+		else {
+			p1 = p1->next;
+			i1--;
+		}
+	}
+	while (head->previous != nullptr) {
+		head = head->previous;
+	}
+	while (tail->next != nullptr) {
+		tail = tail->next;
+	}
+}
+
+void doubly_linked_list::merge_sort(node *p, int i) {
+	
+	if (i == 1 || i == 0) return;
+	if (i == 2) {
+		node *temp = p->next;
+		if (p->value > temp->value) {
+			int tempInt = temp->value;
+			temp->value = p->value;
+			p->value = tempInt;
+		}
+		return;
+	}
+	//int mid = i / 2;
+	node *pBreak = p;
+	for (int j = 0; j < i/2; j++) {
+		pBreak = pBreak->next;
+	}
+	merge_sort(p, i/2);
+	merge_sort(pBreak, i - i / 2);
+	merge(p, i/2, pBreak, i - i / 2);
+	
+}
+
+int main() {
+
+	doubly_linked_list d1, d2;
+	d1.make_random_list(30, 20);
+	d1.print_forward();
+	d1.print_backward();
+
+	d1.selection_sort();
+	d1.print_forward();
+	d1.print_backward();
+
+	d2.make_random_list(40, 20);
+	d2.print_forward();
+	d2.print_backward();
+
+	d2.merge_sort(d2.head, d2.num_nodes);
+	d2.print_forward();
+	d2.print_backward();
+
+	getchar();
+	getchar();
+	return 0;
+
+}

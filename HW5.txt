@@ -1,0 +1,136 @@
+//sizhe zheng
+//HW5
+
+#include<iostream>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<tuple>
+
+using namespace std;
+
+
+pair<int,int> compare1(string &s1, string &s, int start) {
+	int i = start;
+	int j = 0;
+	int count = 0;
+	for (i; i < s.size(); i++) {
+		while (j < s1.size()) {
+			count++;
+			if (s[i] == s1[j]) {
+				j++;
+				break;
+			}
+			else {
+				j = 0;
+				break;
+			}
+		}
+		if (j == s1.size()) break;
+	}
+	pair<int, int> p = make_pair(i, count);
+	return p;
+}
+
+pair<int,int> compare2(string &s2, string &s, int start) {
+	pair<int, int> p;
+	int count = 0;
+	int i = start+1;
+	int length = s2.size();
+	string cs;
+	while (true) {
+		count++;
+		if (s.substr(i).size() < s2.size() && s2.size() != 1) {
+			return p = make_pair(-1, -1);
+		}
+		cs = s.substr(i, length);
+		if (s2 == cs) {
+			i += length;
+		}
+		else {
+			break;
+		}
+	}
+	p = make_pair(i, count);
+	return p;
+}
+
+pair<int,int> compare3(string &s3, string &s, int start) {
+	pair<int, int> p;
+	int i = start;
+	int length = s3.size();
+	string cs = s.substr(i, length);
+	if (cs == s3) {
+		p = make_pair(i + s3.size(), length);
+		return p;
+	}
+	else {
+		p = make_pair(-1, -1);
+		return p;
+	}
+}
+
+
+vector<tuple<int, int,int>> solve(string &s1, string &s2, string &s3, string &s) {
+	vector<tuple<int, int, int>> result;
+	int i = 0;
+	int countC = 0;
+	while (i < s.size()) {
+		for (i; i < s.size(); i++) {
+			int s1s = compare1(s1, s, i).first;
+			countC += compare1(s1, s, i).second;
+			if (s1s == s.size()) {
+				return result;
+			}
+			int s2s = compare2(s2, s, s1s).first;
+			countC += compare2(s2, s, s1s).second;
+			if (s2s == s1s + 1) {
+				//cout << s2s << s1s;
+				i++;
+				break;
+			}
+			if (s2s == -1) {
+				return result;
+			}
+			int s3s = compare3(s3, s, s2s).first;
+			countC += compare3(s3, s, s2s).second;
+			if (s3s == -1) {
+				i++;
+				break;
+			}
+			int count = (s2s - s1s) / s2.size();
+			int start = s1s - s1.size() + 1;
+			int length = s1.size() + s2.size() * count + s3.size();
+			tuple<int, int, int> r = make_tuple(start, length, countC);
+			result.push_back(r);
+		}
+	}
+	sort(result.begin(), result.end());
+	return result;
+}
+
+void showResult(string &s1, string &s2, string &s3, string &s) {
+	vector<tuple<int, int, int>> result = solve(s1, s2, s3, s);
+	if (result.size() == 0) {
+		cout << "No Match!" << endl;
+	}
+	else {
+		cout << "Mathcd string found starting at text position: " << get<0>(result[0]) << endl;
+		string cs = s.substr(get<0>(result[0]), get<1>(result[0]));
+		cout << "Matched String = " << cs << endl;
+		cout << "Total number of character comparisons = " << get<2>(result[0]) << endl;
+	}
+}
+
+int main() {
+	
+	string s1 = "abab";
+	string s2 = "ba";
+	string s3 = "cababa";
+	//string s = "kfjkdjfkjfkjdkjfkdjkfjdkjfkdjkdjjfkdjkfjkdjfkdjfkjdkfjkdjfkjdkfjkdjfjkfdjfkdjfkjdkfjkdfeiurieurieurjdkfjkdjfkdjfkdjfkdjfkdjfkdj kdjfkdjfkdjfk kdjfkdjfdfk jjjkj 4jkjkj3k4jk3j4kkjkj3kjkjkjkjkj45kjk4j5kj jkjjkjkjkjkj454kjkjkj4kj5k4j5kj445454454545 45 4545656566s 666666666667878788989898232323233434343545454545656hjhgjhhjhjh";
+	string s = "qwererejkkfkjjkabkkabkkkabababababbababacababaaaabbbababa";
+	showResult(s1, s2, s3, s);
+	getchar();
+	getchar();
+	return 0;
+}

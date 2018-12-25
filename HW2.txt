@@ -1,0 +1,374 @@
+//Due: Monday (9/24) at 11:59pm
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <stack>
+
+using namespace std;
+
+class pos {
+public:
+	int id;//0...63
+	bool visited;
+	bool in_wait;
+	int from_id;
+	pos() { id = -1; visited = false; in_wait = false; from_id = -1; }
+	int move(int k) {
+		//For this move direction (1 ... 8)
+		//return the new_id once a move is made
+		//or any illeagal value not in 0...63 
+		vector<vector<int>> positionInt = { { 0,1,2,3,4,5,6,7 },{ 8,9,10,11,12,13,14,15 },{ 16,17,18,19,20,21,22,23 },
+		{ 24,25,26,27,28,29,30,31 },{ 32,33,34,35,36,37,38,39 },{ 40,41,42,43,44,45,46,47 },
+		{ 48,49,50,51,52,53,54,55 },{ 56,57,58,59,60,61,62,63 } };
+		int i, j;
+		int found_id = -1;
+		for (i = 0; i < 8; i++) {
+			for (j = 0; j < 8; j++) {
+				found_id++;
+				//cout << found_id << endl;
+				if (found_id == id)break;
+			}
+			if (found_id == id)break;
+		}
+		//cout << found_id << endl;
+		//cout << "i:" <<i <<"j:" << j << endl;
+		int new_id,y,x;
+		if (k == 1) {
+			y = i - 1;
+			x = j + 2;
+			//cout << "y:" << y << "x:" << x << endl;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 2) {
+			y = i - 2;
+			x = j + 1;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 3) {
+			y = i - 2;
+			x = j - 1;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 4) {
+			y = i - 1;
+			x = j - 2;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 5) {
+			y = i + 1;
+			x = j - 2;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 6) {
+			y = i + 2;
+			x = j - 1;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 7) {
+			y = i + 2;
+			x = j + 1;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+		else if (k == 8) {
+			y = i + 1;
+			x = j + 2;
+			if ((y < 0 || y > 7) || (x < 0 || x > 7)) {
+				new_id = -1;
+			}
+			else {
+				new_id = positionInt[y][x];
+			}
+		}
+			//id = new_id;
+			return new_id;
+	}
+};
+
+void print_path(vector<pos> &board, int k);
+void data_input(int &start_id, int &end_id);
+void BFS(vector<pos> &board, int &start_id, int &end_id);
+void DFS(vector<pos> &board, int &start_id, int &end_id);
+
+//You are not allowed to modify main or class pos.
+//For class pos, you need to implement move functiion
+//will explain this in class.
+int main() {
+	vector<pos> board(64);
+	for (int i = 0; i < 64; i++) board[i].id = i;
+	//queue<int> Queue;
+	int start_id = -1, end_id = -1; //legal values are 0 ... 63
+	data_input(start_id, end_id);
+	BFS(board, start_id, end_id);
+	for (int i = 0; i < 64; i++) {
+		board[i].id = i;
+		board[i].visited = false;
+		board[i].in_wait = false;
+		board[i].from_id = -1;
+	}
+	DFS(board, start_id, end_id);
+
+	getchar();
+	getchar();
+	return 0;
+}
+
+void data_input(int &start_id, int &end_id) {
+	//stard_id, end_id will be in 0 ... 63
+	char x_start_id_char;
+	int y_start_id_int, x_start_id_int;
+	cout << "Enter starting position -- x is in a...h and y is in 1...8" << endl;
+	cin >> x_start_id_char >> y_start_id_int;
+	if (x_start_id_char == 'a' || x_start_id_char == 'A') {
+		x_start_id_int = 0;
+	}
+	else if (x_start_id_char == 'b' || x_start_id_char == 'B') {
+		x_start_id_int = 1;
+	}
+	else if (x_start_id_char == 'c' || x_start_id_char == 'C') {
+		x_start_id_int = 2;
+	}
+	else if (x_start_id_char == 'd' || x_start_id_char == 'D') {
+		x_start_id_int = 3;
+	}
+	else if (x_start_id_char == 'e' || x_start_id_char == 'E') {
+		x_start_id_int = 4;
+	}
+	else if (x_start_id_char == 'f' || x_start_id_char == 'F') {
+		x_start_id_int = 5;
+	}
+	else if (x_start_id_char == 'g' || x_start_id_char == 'G') {
+		x_start_id_int = 6;
+	}
+	else if (x_start_id_char == 'h' || x_start_id_char == 'H') {
+		x_start_id_int = 7;
+	}
+	else {
+		x_start_id_int = -1;
+	}
+	if ((x_start_id_int < 0 || x_start_id_int > 7) || (y_start_id_int < 1 || y_start_id_int > 8)) {
+		cout << "Illeagal input of the start position" << endl;
+		return;
+	}
+
+	char x_end_id_char;
+	int x_end_id_int, y_end_id_int;
+	cout << "Enter ending position -- x is in a...h and y is in 1...8" << endl;
+	cin >> x_end_id_char >> y_end_id_int;
+	if (x_end_id_char == 'a' || x_end_id_char == 'A') {
+		x_end_id_int = 0;
+	}
+	else if (x_end_id_char == 'b' || x_end_id_char == 'B') {
+		x_end_id_int = 1;
+	}
+	else if (x_end_id_char == 'c' || x_end_id_char == 'C') {
+		x_end_id_int = 2;
+	}
+	else if (x_end_id_char == 'd' || x_end_id_char == 'D') {
+		x_end_id_int = 3;
+	}
+	else if (x_end_id_char == 'e' || x_end_id_char == 'E') {
+		x_end_id_int = 4;
+	}
+	else if (x_end_id_char == 'f' || x_end_id_char == 'F') {
+		x_end_id_int = 5;
+	}
+	else if (x_end_id_char == 'g' || x_end_id_char == 'G') {
+		x_end_id_int = 6;
+	}
+	else if (x_end_id_char == 'h' || x_end_id_char == 'H') {
+		x_end_id_int = 7;
+	}
+	else {
+		x_end_id_int = -1;
+	}
+	if ((x_end_id_int < 0 || x_end_id_int > 7) || (y_end_id_int < 1 || y_end_id_int > 8)) {
+		cout << "Illeagal input of the ending position" << endl;
+		return;
+	}
+
+	vector<vector<int>> positionInt = {{0,1,2,3,4,5,6,7},{8,9,10,11,12,13,14,15},{16,17,18,19,20,21,22,23},
+									   {24,25,26,27,28,29,30,31},{32,33,34,35,36,37,38,39},{40,41,42,43,44,45,46,47},
+									   {48,49,50,51,52,53,54,55},{56,57,58,59,60,61,62,63} };
+	start_id = positionInt[y_start_id_int - 1][x_start_id_int];
+	end_id = positionInt[y_end_id_int - 1][x_end_id_int];
+	//start_id = positionInt[2][2];
+	//end_id = positionInt[3][3];
+	//cout << start_id << endl;
+	//cout <<end_id << endl;
+}
+
+void BFS(vector<pos> &board, int &start_id, int &end_id) {
+	// Your code here.
+	//If you find no solution, print the following
+	//cout << "No solution is possible" << endl;
+	
+	if (start_id == end_id) return;
+	pos current_pos,next_pos;
+	queue<pos> q;
+	current_pos = board[start_id];
+	current_pos.in_wait = true;
+	current_pos.from_id = -1;
+	q.push(current_pos);
+	while (!q.empty()) {
+		current_pos = q.front();
+		current_pos.visited = true;
+		q.pop();
+		for (int i = 1; i <= 8; i++) {
+			next_pos = board[current_pos.id];
+			next_pos.id = next_pos.move(i);
+			if (next_pos.id != -1 && next_pos.visited == false) {
+				if (board[next_pos.id].from_id == -1 && board[next_pos.id].id != start_id) {
+					board[next_pos.id].from_id = current_pos.id;
+				}
+				if (next_pos.id == end_id) {
+					print_path(board, end_id);
+					return;
+				}
+				q.push(next_pos);
+				next_pos.in_wait = true;
+			}
+		}
+	}
+}
+
+
+void DFS(vector<pos> &board, int &start_id, int &end_id) {
+	// Your code here.
+	//If you find no solution, print the following
+	//cout << "No solution is possible" << endl;
+
+	if (start_id == end_id) return;
+	pos current_pos, next_pos;
+	stack<pos> st;
+	current_pos = board[start_id];
+	board[current_pos.id].in_wait = true;
+	board[current_pos.id].from_id = -1;
+	st.push(current_pos);
+	while (!st.empty()) {
+		current_pos = st.top();
+		board[current_pos.id].visited = true;
+		st.pop();
+		for (int i = 1; i <= 8; i++) {
+			next_pos = board[current_pos.id];
+			next_pos.id = next_pos.move(i);
+			if (next_pos.id != -1 && board[next_pos.id].in_wait == false) {
+				st.push(next_pos);
+				board[next_pos.id].in_wait = true;
+				board[next_pos.id].from_id = current_pos.id;
+			}
+				if (next_pos.id == end_id) {
+					print_path(board, end_id);
+					return;
+				}
+		}
+	}
+}
+
+void convert(int &k) {
+	int i, j;
+	int found_id = -1;
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < 8; j++) {
+			found_id++;
+			if (found_id == k)break;
+		}
+		if (found_id == k)break;
+	}
+
+	char x_char;
+	if (j == 0) {
+		x_char = 'a';
+	}
+	else if (j == 1) {
+		x_char = 'b';
+	}
+	else if (j == 2) {
+		x_char = 'c';
+	}
+	else if (j == 3) {
+		x_char = 'd';
+	}
+	else if (j == 4) {
+		x_char = 'e';
+	}
+	else if (j == 5) {
+		x_char = 'f';
+	}
+	else if (j == 6) {
+		x_char = 'g';
+	}
+	else if (j == 7) {
+		x_char = 'h';
+	}
+	cout << "(" << x_char << "," << i+1 << ")";
+}
+
+void print_path(vector<pos> &board, int k) {
+	//In both DFS and BFS, when the target postion is reached, this function will be called.
+
+	//Your code
+
+	cout << endl;
+	cout << "Target is reached!" << endl;
+	pos current;
+	current = board[k];
+	while (current.from_id != -1) {
+		convert(current.id);
+		cout << " <-- ";
+		current = board[current.from_id];
+	}
+	convert(current.id);
+	cout << endl;
+}
+
+//The following is a sample screenshot.  You have to ensure that your output format is idential to it.
+
+/*
+Enter starting position --  x is in a ... h and y is in 1 ... 8
+b 3
+Enter ending position -- x is in a ... h and y is in 1 ... 8
+f 2
+
+Target is reached!
+(f,2) <-- (e,4) <-- (d,2) <-- (b,3)
+
+Target is reached!
+(f,2) <-- (d,1) <-- (c,3) <-- (a,2) <-- (b,4) <-- (a,6) <-- (c,7) <-- (a,8) <-- (b,6) <-- (c,4) <-- (e,5) <-- (g,6) <-- (f,8) <-- (h,7) <-- (f,6) <-- (g,8) <-- (h,6) <-- (f,5) <-- (d,4) <-- (b,3)
+
+*/

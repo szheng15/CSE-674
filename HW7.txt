@@ -1,0 +1,233 @@
+//CSE674 HW7
+//Due : Dec. 11 (Tuesday) at 11 : 59pm
+//points : 40
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+
+class node {
+
+public:
+	vector<int> value;  //the size of value vector determine the number of values in the node, which can be 1 to 3
+	node * parent;
+	vector<node *> child;  // which can have 2 to 4 elements. For a leaf node, values of child will all be nullptr.
+	int child_state; //a non-root node can have up to 4 child nodes: child 0, 1, 2, 3.  child_state i (0 ... 3) means this node is child i of its parent
+	//The child_state of a root node is -1 
+
+	node() { parent = nullptr; }
+	void add_value(int k);  //add value to a node of less than 3 value; this will be used by the add member funciton of two34_tree
+	bool isleaf();
+	int count;
+	void remove_value(int k);
+};
+
+void node::remove_value(int k) {
+	vector<int>::iterator it;
+	it = find(value.begin(), value.end(), k);
+	value.erase(it);
+	count = value.size();
+}
+
+bool node::isleaf() {
+	if (child[0] == nullptr && child[1] == nullptr && child[2] == nullptr && child[3] == nullptr) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void node::add_value(int k) {
+	value.push_back(k);
+	sort(value.begin(), value.end());
+	count = value.size();
+}
+
+
+class two34_tree {
+public:
+	node * root;
+	two34_tree() { root = nullptr;  }
+	void add(int k);
+	//during search for a node to add value, if a tie occurrs and the search can go toward multiple child branches, pick the child node
+	//with a minimum nomber of values. If there are still ties,  pick the right-most branch among those with minumum number of values.
+	void break_3_value_node(node * p);
+	
+	//to be invoked by add
+	void in_order_traversal(node * p);
+	node* add_helper(int k);
+	void adjust(node * p);
+	void merge(node * p);
+};
+
+void two34_tree::add(int k) {
+	if (root == nullptr) {
+		root = new node();
+		root->child.assign(4, nullptr);
+		root->add_value(k);
+		root->child_state = -1;
+		root->count = 0;
+	}
+	else {
+		node *action = add_helper(k);
+		action->add_value(k);
+	}
+}
+
+node* two34_tree::add_helper(int k) {
+	node *p = root;
+	while (p->isleaf() == false) {
+		int child = 0;
+		vector<int>::iterator temp = p->value.begin();
+		while (temp != p->value.end()) {
+			if (k < *temp) {
+				p = p->child[child];
+				break;
+			}
+			if (temp + 1 == p->value.end()) {
+				p = p->child[child + 1];
+				break;
+			}
+			child++;
+			temp++;
+		}
+
+	}
+	if (p->count < 3)return p;
+	else {
+		int temp = p->value[1];
+		break_3_value_node(p);
+		if (k < temp)return p->child[0];
+		else return p->child[1];
+	}
+}
+
+void two34_tree::break_3_value_node(node *p) {
+	node *left = new node();
+	left->child.assign(4, nullptr);
+	node *right = new node();
+	right->child.assign(4, nullptr);
+	left->add_value(p->value.front());
+	right->add_value(p->value.back());
+	if (p->child[0] != nullptr) {
+		left->child[0] = p->child[0];
+		p->child[0]->parent = left;
+		left->child[1] = p->child[1];
+		p->child[1]->parent = left;
+		right->child[0] = p->child[2];
+		p->child[2]->parent = right;
+		right->child[1] = p->child[3];
+		p->child[3]->parent = right;
+		adjust(left);
+		adjust(right);
+	}
+	left->parent = p;
+	right->parent = p;
+
+	left->child_state = 0;
+	right->child_state = 1;
+	p->child.assign(4, nullptr);
+	p->child[0] = left;
+	p->child[1] = right;
+	p->remove_value(p->value.back());
+	p->remove_value(p->value.front());
+	merge(p);
+}
+
+void two34_tree::adjust(node *p) {
+	int num = p->count + 1;
+	int start = 0;
+	if (p->child[0] == nullptr)return;
+	while (num--) {
+		p->child[start]->child_state = start;
+		start++;
+	}
+}
+void two34_tree::merge(node *p) {
+	node *parent = p->parent;
+	if (parent == nullptr) {
+		return;
+	}
+	if (parent->count == 3) {
+		break_3_value_node(parent);
+	}
+	parent = p->parent;
+
+	if (p->value[0] < parent->value[0]) {
+		parent->child.erase(parent->child.begin());
+		parent->child.insert(parent->child.begin(), p->child.begin(), p->child.begin() + 2);
+		parent->child.resize(4);
+	}
+	else if (parent->count == 1 || p->value[0] < parent->value[1]) {
+		parent->child.erase(parent->child.begin() + 1);
+		parent->child.insert(parent->child.begin() + 1, p->child.begin(), p->child.begin() + 2);
+		parent->child.resize(4);
+	}
+	else if (parent->count == 2 || p->value[0] < parent->value[2]) {
+		parent->child.erase(parent->child.begin() + 2);
+		parent->child.insert(parent->child.begin() + 2, p->child.begin(), p->child.begin() + 2);
+		parent->child.resize(4);
+	}
+	else {
+		parent->child.erase(parent->child.begin() + 3);
+		parent->child.insert(parent->child.begin() + 3, p->child.begin(), p->child.begin() + 2);
+		parent->child.resize(4);
+	}
+	parent->add_value(p->value[0]);
+	int num = parent->count;
+	adjust(parent);
+	p->child[0]->parent = parent;
+	p->child[1]->parent = parent;
+}
+
+void two34_tree::in_order_traversal(node * p) {
+	cout << endl;
+	node * p1 = p;
+	if (p1 == nullptr) return;
+	int i;
+	for (i = 0; i < p1->value.size(); i++) {
+		in_order_traversal(p1->child[i]);
+		cout << "  " << p1->value[i] << "  " << "child_state = " << p1->child_state;
+	}
+	in_order_traversal(p1->child[i]);
+}
+
+
+int main() {
+	//The following is just an example.
+	//Different test casess can be used during grading.
+
+	two34_tree t1;
+	t1.add(40);
+	t1.add(30);
+	t1.add(20);
+	t1.in_order_traversal(t1.root);
+	t1.add(100);
+	t1.add(120);
+	t1.in_order_traversal(t1.root);
+	t1.add(200);
+	t1.in_order_traversal(t1.root);
+	t1.add(400);
+	t1.in_order_traversal(t1.root);
+	t1.add(600);
+	t1.in_order_traversal(t1.root);
+	t1.add(800);
+	t1.in_order_traversal(t1.root);
+	t1.add(100);
+	t1.add(100);
+	t1.in_order_traversal(t1.root);
+	t1.add(100);
+	t1.add(100);
+	t1.in_order_traversal(t1.root);
+	t1.add(100);
+	t1.add(100);
+	t1.in_order_traversal(t1.root);
+	getchar();
+	getchar();
+	return 0;
+
+}
+
